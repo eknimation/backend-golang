@@ -219,3 +219,61 @@ func (ctrl *Controller) convertUsersToResponseDTOs(users []*domain.User) []UserR
 
 	return userDTOs
 }
+
+// @Summary      Update User
+// @Description  Update user information (name and/or email)
+// @Tags         Users
+// @Accept       json
+// @Produce      json
+// @Param        id   path      string        true  "User ID"
+// @Param        user body      UpdateUserDTO true  "User update details"
+// @Success      200  {object}  responses.Response
+// @Failure      400  {object}  responses.ErrorResponse  "Bad Request - Validation failed or email already exists"
+// @Failure      404  {object}  responses.ErrorResponse  "User not found"
+// @Failure      500  {object}  responses.ErrorResponse
+// @Router       /v1/users/{id} [put]
+// @Security     BearerAuth
+func (ctrl *Controller) UpdateUser(c echo.Context) error {
+	// Get user ID from path parameter
+	id := c.Param("id")
+	if id == "" {
+		return c.JSON(http.StatusBadRequest, responses.Error(http.StatusBadRequest, "User ID is required"))
+	}
+
+	var updateUserDTO UpdateUserDTO
+	if err := c.Bind(&updateUserDTO); err != nil {
+		return c.JSON(http.StatusBadRequest, responses.Error(http.StatusBadRequest, err.Error()))
+	}
+
+	// Validate the updateUserDTO struct
+	if err := validator.Validate(&updateUserDTO); err != nil {
+		validationErr := validator.FormatValidationErrors(err)
+		return c.JSON(http.StatusBadRequest, validationErr)
+	}
+
+	// Check if at least one field is provided for update
+	if updateUserDTO.Name == "" && updateUserDTO.Email == "" {
+		return c.JSON(http.StatusBadRequest, responses.Error(http.StatusBadRequest, "At least one field (name or email) must be provided for update"))
+	}
+
+	user := domain.User{
+		Name:  updateUserDTO.Name,
+		Email: updateUserDTO.Email,
+	}
+
+	err := ctrl.uc.UpdateUser(id, user)
+	if err != nil {
+		if strings.Contains(err.Error(), "user not found") {
+			return c.JSON(http.StatusNotFound, responses.Error(http.StatusNotFound, "User not found"))
+		}
+		if strings.Contains(err.Error(), "email already exists") {
+			return c.JSON(http.StatusBadRequest, responses.Error(http.StatusBadRequest, "Email already exists"))
+		}
+		if strings.Contains(err.Error(), "invalid user ID format") {
+			return c.JSON(http.StatusBadRequest, responses.Error(http.StatusBadRequest, "Invalid user ID format"))
+		}
+		return c.JSON(http.StatusInternalServerError, responses.Error(http.StatusInternalServerError, err.Error()))
+	}
+
+	return c.JSON(http.StatusOK, responses.Ok(http.StatusOK, "User updated successfully", nil))
+}

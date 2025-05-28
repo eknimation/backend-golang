@@ -24,5 +24,6 @@ func InitController(e *echo.Echo, usecase *usecase.Usecase) {
 	usersGroup.Use(middlewares.JWTAuth())
 	usersGroup.GET("", controller.GetAllUsers) // Get all users
 	usersGroup.GET("/:id", controller.GetUserByID)
+	usersGroup.PUT("/:id", controller.UpdateUser) // Update user
 	// usersGroup.GET("/me", controller.GetCurrentUser)
 }

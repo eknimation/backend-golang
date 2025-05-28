@@ -260,6 +260,68 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update user information (name and/or email)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Update User",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "User update details",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controllers.UpdateUserDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/responses.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request - Validation failed or email already exists",
+                        "schema": {
+                            "$ref": "#/definitions/responses.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "schema": {
+                            "$ref": "#/definitions/responses.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/responses.ErrorResponse"
+                        }
+                    }
+                }
             }
         }
     },
@@ -308,6 +370,21 @@ const docTemplate = `{
                 "totalPages": {
                     "type": "integer",
                     "example": 3
+                }
+            }
+        },
+        "controllers.UpdateUserDTO": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "jimmy@example.com"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 2,
+                    "example": "Jimmy"
                 }
             }
         },

@@ -33,6 +33,17 @@ definitions:
         example: 3
         type: integer
     type: object
+  controllers.UpdateUserDTO:
+    properties:
+      email:
+        example: jimmy@example.com
+        type: string
+      name:
+        example: Jimmy
+        maxLength: 50
+        minLength: 2
+        type: string
+    type: object
   controllers.UserDTO:
     properties:
       email:
@@ -220,6 +231,46 @@ paths:
       security:
       - BearerAuth: []
       summary: Get User by ID
+      tags:
+      - Users
+    put:
+      consumes:
+      - application/json
+      description: Update user information (name and/or email)
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User update details
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.UpdateUserDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/responses.Response'
+        "400":
+          description: Bad Request - Validation failed or email already exists
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update User
       tags:
       - Users
   /v1/users/login:

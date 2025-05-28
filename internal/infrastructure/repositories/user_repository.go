@@ -142,6 +142,56 @@ func (r *Repo) GetUsersWithPagination(page, limit int) ([]*domain.User, int, err
 	return users, int(totalCount), nil
 }
 
+// UpdateUser updates a user's information (name and/or email)
+func (r *Repo) UpdateUser(id string, user domain.User) error {
+	// Create a context with a timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// Convert string ID to ObjectID
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return errors.New("invalid user ID format")
+	}
+
+	// Get the "users" collection
+	collection := r.db.Collection("users")
+
+	// Build update document dynamically
+	updateDoc := bson.M{}
+	if user.Name != "" {
+		updateDoc["name"] = user.Name
+	}
+	if user.Email != "" {
+		updateDoc["email"] = user.Email
+	}
+
+	// If no fields to update, return error
+	if len(updateDoc) == 0 {
+		return errors.New("no fields to update")
+	}
+
+	// Create the update operation
+	update := bson.M{"$set": updateDoc}
+
+	// Update the user document
+	result, err := collection.UpdateOne(ctx, bson.M{"_id": objectID}, update)
+	if err != nil {
+		// Check if the error is a duplicate key error (email already exists)
+		if mongo.IsDuplicateKeyError(err) {
+			return errors.New("email already exists")
+		}
+		return err
+	}
+
+	// Check if any document was updated
+	if result.MatchedCount == 0 {
+		return errors.New("user not found")
+	}
+
+	return nil
+}
+
 // convertUserModelsToEntities converts database models to domain entities
 func (r *Repo) convertUserModelsToEntities(userModels []models.UserModel) []*domain.User {
 	users := make([]*domain.User, 0, len(userModels))

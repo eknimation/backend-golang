@@ -38,3 +38,8 @@ type UserListResponseDTO struct {
 	Users      []UserResponseDTO  `json:"users"`
 	Pagination PaginationResponse `json:"pagination"`
 }
+
+type UpdateUserDTO struct {
+	Name  string `json:"name,omitempty" validate:"omitempty,min=2,max=50" example:"Jimmy"`
+	Email string `json:"email,omitempty" validate:"omitempty,emailFormat" example:"jimmy@example.com"`
+}

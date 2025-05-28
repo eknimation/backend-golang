@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"errors"
+	"strings"
 	"time"
 
 	"backend-service/config"
@@ -26,28 +27,23 @@ func (uc *Usecase) CreateUser(user domain.User) error {
 }
 
 func (uc *Usecase) AuthenticateUser(user domain.User) (string, error) {
-	// Get user by email
 	storedUser, err := uc.userRepo.GetUserByEmail(user.Email)
 	if err != nil {
 		return "", errors.New("invalid credentials")
 	}
 
-	// Verify password
 	err = password.VerifyPassword(storedUser.Password, user.Password)
 	if err != nil {
 		return "", errors.New("invalid credentials")
 	}
 
-	// Get JWT configuration
 	appConfig := config.GetAppConfig()
 	if appConfig.JWTSecret == "" {
 		return "", errors.New("JWT secret not configured")
 	}
 
-	// Create JWT manager with 24 hour token duration
 	jwtManager := jwt.NewJWTManager(appConfig.JWTSecret, 24*time.Hour)
 
-	// Generate JWT token
 	token, err := jwtManager.GenerateToken(storedUser.ID, storedUser.Email)
 	if err != nil {
 		return "", err
@@ -65,12 +61,11 @@ func (uc *Usecase) GetUserByID(id string) (*domain.User, error) {
 }
 
 func (uc *Usecase) GetUsersWithPagination(page, limit int) ([]*domain.User, int, error) {
-	// Set default values if needed
 	if page < 1 {
 		page = 1
 	}
 	if limit < 1 || limit > 100 {
-		limit = 10 // Default limit
+		limit = 10
 	}
 
 	users, totalCount, err := uc.userRepo.GetUsersWithPagination(page, limit)
@@ -78,4 +73,29 @@ func (uc *Usecase) GetUsersWithPagination(page, limit int) ([]*domain.User, int,
 		return nil, 0, err
 	}
 	return users, totalCount, nil
+}
+
+func (uc *Usecase) UpdateUser(id string, user domain.User) error {
+	existingUser, err := uc.userRepo.GetUserByID(id)
+	if err != nil {
+		return err
+	}
+
+	if user.Email != "" && user.Email != existingUser.Email {
+		_, err := uc.userRepo.GetUserByEmail(user.Email)
+		if err == nil {
+			return errors.New("email already exists")
+		}
+
+		if !strings.Contains(err.Error(), "user not found") {
+			return err
+		}
+	}
+
+	err = uc.userRepo.UpdateUser(id, user)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
