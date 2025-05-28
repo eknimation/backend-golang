@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"backend-service/config"
 	"backend-service/docs"
@@ -55,6 +56,23 @@ func main() {
 
 	repo := repositories.New(dbClient, appConfig.MongoDB.DatabaseName)
 	usecase := usecase.New(repo)
+
+	go func() {
+		ticker := time.NewTicker(10 * time.Second)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-ticker.C:
+				count, err := usecase.GetUserCount()
+				if err != nil {
+					logger.Error(fmt.Sprintf("Failed to get user count: %v", err))
+				} else {
+					logger.Info(fmt.Sprintf("Total users in database: %d", count))
+				}
+			}
+		}
+	}()
 
 	if appConfig.Env != "production" {
 		e.GET("/swagger/*", echoSwagger.WrapHandler)
