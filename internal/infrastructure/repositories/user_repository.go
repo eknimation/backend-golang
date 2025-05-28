@@ -109,7 +109,9 @@ func (r *Repo) GetUsersWithPagination(page, limit int) ([]*domain.User, int, err
 	if err != nil {
 		return nil, 0, err
 	}
-	defer cursor.Close(ctx)
+	defer func() {
+		_ = cursor.Close(ctx)
+	}()
 
 	var userModels []models.UserModel
 	if err = cursor.All(ctx, &userModels); err != nil {
@@ -182,6 +184,21 @@ func (r *Repo) DeleteUser(id string) error {
 	}
 
 	return nil
+}
+
+func (r *Repo) GetUserCount() (int64, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	collection := r.db.Collection("users")
+	filter := bson.M{}
+
+	count, err := collection.CountDocuments(ctx, filter)
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
 }
 
 func (r *Repo) convertUserModelsToEntities(userModels []models.UserModel) []*domain.User {

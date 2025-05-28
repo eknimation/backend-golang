@@ -113,3 +113,11 @@ func (uc *Usecase) DeleteUser(id string) error {
 
 	return nil
 }
+
+func (uc *Usecase) GetUserCount() (int64, error) {
+	count, err := uc.userRepo.GetUserCount()
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}

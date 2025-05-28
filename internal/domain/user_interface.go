@@ -7,4 +7,5 @@ type UserInterface interface {
 	GetUsersWithPagination(page, limit int) ([]*User, int, error)
 	UpdateUser(id string, user User) error
 	DeleteUser(id string) error
+	GetUserCount() (int64, error)
 }
