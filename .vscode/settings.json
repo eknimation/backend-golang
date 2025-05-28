@@ -1,0 +1,9 @@
+{
+    "gopls": {
+        "formatting.gofumpt": true,
+    },
+    "go.lintTool": "golangci-lint",
+    "go.lintFlags": [
+        "--fast"
+    ]
+}

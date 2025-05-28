@@ -1,0 +1,95 @@
+basePath: /
+definitions:
+  controllers.UserDTO:
+    properties:
+      email:
+        example: jimmy@example.com
+        type: string
+      name:
+        example: Jimmy
+        maxLength: 50
+        minLength: 2
+        type: string
+      password:
+        example: pas$worD123
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+  responses.ErrorDetail:
+    properties:
+      message:
+        example: Internal Server Error
+        type: string
+      stack:
+        example: Error:Database error
+        type: string
+    type: object
+  responses.ErrorResponse:
+    properties:
+      code:
+        example: UNHANDLED_EXCEPTION
+        type: string
+      error:
+        $ref: '#/definitions/responses.ErrorDetail'
+    type: object
+  responses.Response:
+    properties:
+      code:
+        example: SUCCESS
+        type: string
+      data: {}
+      message:
+        example: successfully
+        type: string
+    type: object
+host: localhost:5555
+info:
+  contact:
+    email: eknimation@gmail.com
+    name: Akekapon S.
+  description: Backend service API for user management and authentication
+  title: Backend Go API
+  version: v1.0.0
+paths:
+  /v1/user:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user account with name, email and password
+      parameters:
+      - description: User registration details
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.UserDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/responses.Response'
+        "400":
+          description: Bad Request - Validation failed or email already exists
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+      security:
+      - X-API-Key: []
+      summary: Create User
+      tags:
+      - Users
+securityDefinitions:
+  X-API-Key:
+    description: API key for authentication
+    in: header
+    name: X-API-Key
+    type: apiKey
+swagger: "2.0"
