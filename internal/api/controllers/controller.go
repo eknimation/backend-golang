@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"backend-service/internal/application/usecase"
+	"backend-service/pkg/utilities/middlewares"
 
 	"github.com/labstack/echo/v4"
 )
@@ -15,11 +16,14 @@ func InitController(e *echo.Echo, usecase *usecase.Usecase) {
 	apiV1 := e.Group("/v1")
 
 	// Public user routes (no auth required)
-	apiV1.POST("/users", controller.CreateUser) // Create user account
+	apiV1.POST("/users", controller.CreateUser)
 	apiV1.POST("/users/login", controller.AuthenticateUser)
 
 	// Protected user routes (JWT required)
-	// usersGroup := apiV1.Group("/users")
-	// usersGroup.Use(middlewares.JWTAuth())
-	// usersGroup.GET("/me", controller.GetCurrentUser)
+	usersGroup := apiV1.Group("/users")
+	usersGroup.Use(middlewares.JWTAuth())
+	usersGroup.GET("", controller.GetAllUsers)
+	usersGroup.GET("/:id", controller.GetUserByID)
+	usersGroup.PUT("/:id", controller.UpdateUser)
+	usersGroup.DELETE("/:id", controller.DeleteUser)
 }
