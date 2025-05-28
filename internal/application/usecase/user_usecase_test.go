@@ -180,25 +180,25 @@ func setupTestUsecase() *Usecase {
 
 func TestMain(m *testing.M) {
 	// Set up test environment variables
-	os.Setenv("JWT_SECRET", "test-secret-key-for-jwt-testing")
-	os.Setenv("MONGODB_HOST", "localhost")
-	os.Setenv("MONGODB_PORT", "27017")
-	os.Setenv("MONGODB_DATABASE_NAME", "test")
-	os.Setenv("API_PORT", "8080")
-	os.Setenv("APP_ENV", "test")
-	os.Setenv("BASE_PATH", "/api")
+	_ = os.Setenv("JWT_SECRET", "test-secret-key-for-jwt-testing")
+	_ = os.Setenv("MONGODB_HOST", "localhost")
+	_ = os.Setenv("MONGODB_PORT", "27017")
+	_ = os.Setenv("MONGODB_DATABASE_NAME", "test")
+	_ = os.Setenv("API_PORT", "8080")
+	_ = os.Setenv("APP_ENV", "test")
+	_ = os.Setenv("BASE_PATH", "/api")
 
 	// Run tests
 	code := m.Run()
 
 	// Clean up
-	os.Unsetenv("JWT_SECRET")
-	os.Unsetenv("MONGODB_HOST")
-	os.Unsetenv("MONGODB_PORT")
-	os.Unsetenv("MONGODB_DATABASE_NAME")
-	os.Unsetenv("API_PORT")
-	os.Unsetenv("APP_ENV")
-	os.Unsetenv("BASE_PATH")
+	_ = os.Unsetenv("JWT_SECRET")
+	_ = os.Unsetenv("MONGODB_HOST")
+	_ = os.Unsetenv("MONGODB_PORT")
+	_ = os.Unsetenv("MONGODB_DATABASE_NAME")
+	_ = os.Unsetenv("API_PORT")
+	_ = os.Unsetenv("APP_ENV")
+	_ = os.Unsetenv("BASE_PATH")
 
 	os.Exit(code)
 }

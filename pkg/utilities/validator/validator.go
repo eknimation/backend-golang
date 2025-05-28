@@ -90,7 +90,7 @@ func ConvertStringToTime(date string) (time.Time, error) {
 	var response error
 	result, err := time.Parse(time.RFC3339, date)
 	if err != nil {
-		response = errors.New("Date is wrong format")
+		response = errors.New("date is wrong format")
 		return result, response
 	}
 
@@ -103,7 +103,7 @@ func ValidateDateRange(startDate time.Time, endDate time.Time) error {
 
 	// end date can equal to start date but not before
 	if endDate.Before(startDate) {
-		response = errors.New("End date must be after start date")
+		response = errors.New("end date must be after start date")
 		return response
 	}
 

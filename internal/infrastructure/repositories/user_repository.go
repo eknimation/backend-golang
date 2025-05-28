@@ -109,7 +109,9 @@ func (r *Repo) GetUsersWithPagination(page, limit int) ([]*domain.User, int, err
 	if err != nil {
 		return nil, 0, err
 	}
-	defer cursor.Close(ctx)
+	defer func() {
+		_ = cursor.Close(ctx)
+	}()
 
 	var userModels []models.UserModel
 	if err = cursor.All(ctx, &userModels); err != nil {
