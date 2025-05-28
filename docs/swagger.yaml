@@ -194,6 +194,40 @@ paths:
       tags:
       - Users
   /v1/users/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a user by their ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/responses.Response'
+        "400":
+          description: Bad Request - Invalid user ID
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete User
+      tags:
+      - Users
     get:
       consumes:
       - application/json
@@ -311,7 +345,7 @@ paths:
             $ref: '#/definitions/responses.ErrorResponse'
       summary: Authenticate User
       tags:
-      - Authentication
+      - Users
 securityDefinitions:
   BearerAuth:
     description: 'Bearer token for JWT authentication. Format: "Bearer {token}"'

@@ -53,7 +53,7 @@ func (ctrl *Controller) CreateUser(c echo.Context) error {
 
 // @Summary      Authenticate User
 // @Description  Authenticate a user with email and password, returns JWT token
-// @Tags         Authentication
+// @Tags         Users
 // @Accept       json
 // @Produce      json
 // @Param        credentials  body      LoginDTO  true  "User login credentials"
@@ -276,4 +276,37 @@ func (ctrl *Controller) UpdateUser(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, responses.Ok(http.StatusOK, "User updated successfully", nil))
+}
+
+// @Summary      Delete User
+// @Description  Delete a user by their ID
+// @Tags         Users
+// @Accept       json
+// @Produce      json
+// @Param        id   path      string  true  "User ID"
+// @Success      200  {object}  responses.Response
+// @Failure      400  {object}  responses.ErrorResponse  "Bad Request - Invalid user ID"
+// @Failure      404  {object}  responses.ErrorResponse  "User not found"
+// @Failure      500  {object}  responses.ErrorResponse
+// @Router       /v1/users/{id} [delete]
+// @Security     BearerAuth
+func (ctrl *Controller) DeleteUser(c echo.Context) error {
+	userID := c.Param("id")
+
+	if userID == "" {
+		return c.JSON(http.StatusBadRequest, responses.Error(http.StatusBadRequest, "User ID is required"))
+	}
+
+	err := ctrl.uc.DeleteUser(userID)
+	if err != nil {
+		if strings.Contains(err.Error(), "user not found") {
+			return c.JSON(http.StatusNotFound, responses.Error(http.StatusNotFound, "User not found"))
+		}
+		if strings.Contains(err.Error(), "invalid user ID format") {
+			return c.JSON(http.StatusBadRequest, responses.Error(http.StatusBadRequest, "Invalid user ID format"))
+		}
+		return c.JSON(http.StatusInternalServerError, responses.Error(http.StatusInternalServerError, err.Error()))
+	}
+
+	return c.JSON(http.StatusOK, responses.Ok(http.StatusOK, "User deleted successfully", nil))
 }

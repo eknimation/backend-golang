@@ -99,3 +99,17 @@ func (uc *Usecase) UpdateUser(id string, user domain.User) error {
 
 	return nil
 }
+
+func (uc *Usecase) DeleteUser(id string) error {
+	_, err := uc.userRepo.GetUserByID(id)
+	if err != nil {
+		return err
+	}
+
+	err = uc.userRepo.DeleteUser(id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
