@@ -63,3 +63,19 @@ func (uc *Usecase) GetUserByID(id string) (*domain.User, error) {
 	}
 	return user, nil
 }
+
+func (uc *Usecase) GetUsersWithPagination(page, limit int) ([]*domain.User, int, error) {
+	// Set default values if needed
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 100 {
+		limit = 10 // Default limit
+	}
+
+	users, totalCount, err := uc.userRepo.GetUsersWithPagination(page, limit)
+	if err != nil {
+		return nil, 0, err
+	}
+	return users, totalCount, nil
+}

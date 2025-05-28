@@ -18,6 +18,21 @@ definitions:
         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
         type: string
     type: object
+  controllers.PaginationResponse:
+    properties:
+      limit:
+        example: 10
+        type: integer
+      page:
+        example: 1
+        type: integer
+      totalItems:
+        example: 25
+        type: integer
+      totalPages:
+        example: 3
+        type: integer
+    type: object
   controllers.UserDTO:
     properties:
       email:
@@ -35,6 +50,15 @@ definitions:
     - email
     - name
     - password
+    type: object
+  controllers.UserListResponseDTO:
+    properties:
+      pagination:
+        $ref: '#/definitions/controllers.PaginationResponse'
+      users:
+        items:
+          $ref: '#/definitions/controllers.UserResponseDTO'
+        type: array
     type: object
   controllers.UserResponseDTO:
     properties:
@@ -88,6 +112,47 @@ info:
   version: v1.0.0
 paths:
   /v1/users:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all users in the system with pagination
+      parameters:
+      - description: 'Page number (default: 1)'
+        in: query
+        minimum: 1
+        name: page
+        type: integer
+      - description: 'Items per page (default: 10, max: 100)'
+        in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/responses.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controllers.UserListResponseDTO'
+              type: object
+        "400":
+          description: Bad Request - Invalid pagination parameters
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get All Users
+      tags:
+      - Users
     post:
       consumes:
       - application/json
@@ -198,7 +263,7 @@ paths:
       - Authentication
 securityDefinitions:
   BearerAuth:
-    description: Enter JWT token (the "Bearer " prefix will be added automatically)
+    description: 'Bearer token for JWT authentication. Format: "Bearer {token}"'
     in: header
     name: Authorization
     type: apiKey

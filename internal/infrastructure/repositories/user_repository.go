@@ -11,6 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func (r *Repo) CreateUser(user domain.User) error {
@@ -62,13 +63,7 @@ func (r *Repo) GetUserByEmail(email string) (*domain.User, error) {
 	}
 
 	// Map models.UserModel to domain.User
-	user := &domain.User{
-		ID:        userModel.ID.Hex(),
-		Name:      userModel.Name,
-		Email:     userModel.Email,
-		Password:  userModel.Password,
-		CreatedAt: &userModel.CreatedAt,
-	}
+	user := r.convertUserModelToEntityWithPassword(userModel)
 
 	return user, nil
 }
@@ -98,12 +93,80 @@ func (r *Repo) GetUserByID(id string) (*domain.User, error) {
 	}
 
 	// Map models.UserModel to domain.User
-	user := &domain.User{
+	user := r.convertUserModelToEntity(userModel)
+
+	return user, nil
+}
+
+func (r *Repo) GetUsersWithPagination(page, limit int) ([]*domain.User, int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	collection := r.db.Collection("users")
+	filter := bson.M{} // Empty filter to get all users
+
+	// Get total count first
+	totalCount, err := collection.CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// Calculate pagination values
+	skip := (page - 1) * limit
+	skipValue := int64(skip)
+	limitValue := int64(limit)
+
+	// Set up find options for pagination
+	findOptions := &options.FindOptions{
+		Skip:  &skipValue,
+		Limit: &limitValue,
+		Sort:  bson.D{{Key: "createdAt", Value: -1}}, // Newest first
+	}
+
+	// Execute the query
+	cursor, err := collection.Find(ctx, filter, findOptions)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer cursor.Close(ctx)
+
+	// Decode results
+	var userModels []models.UserModel
+	if err = cursor.All(ctx, &userModels); err != nil {
+		return nil, 0, err
+	}
+
+	// Convert to domain entities
+	users := r.convertUserModelsToEntities(userModels)
+
+	return users, int(totalCount), nil
+}
+
+// convertUserModelsToEntities converts database models to domain entities
+func (r *Repo) convertUserModelsToEntities(userModels []models.UserModel) []*domain.User {
+	users := make([]*domain.User, 0, len(userModels))
+
+	for _, userModel := range userModels {
+		user := r.convertUserModelToEntity(userModel)
+		users = append(users, user)
+	}
+
+	return users
+}
+
+// convertUserModelToEntity converts a single database model to domain entity
+func (r *Repo) convertUserModelToEntity(userModel models.UserModel) *domain.User {
+	return &domain.User{
 		ID:        userModel.ID.Hex(),
 		Name:      userModel.Name,
 		Email:     userModel.Email,
 		CreatedAt: &userModel.CreatedAt,
 	}
+}
 
-	return user, nil
+// convertUserModelToEntityWithPassword converts a single database model to domain entity including password
+func (r *Repo) convertUserModelToEntityWithPassword(userModel models.UserModel) *domain.User {
+	user := r.convertUserModelToEntity(userModel)
+	user.Password = userModel.Password
+	return user
 }

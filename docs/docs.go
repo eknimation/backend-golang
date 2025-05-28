@@ -19,6 +19,73 @@ const docTemplate = `{
     "basePath": "{{.BasePath}}",
     "paths": {
         "/v1/users": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve all users in the system with pagination",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Get All Users",
+                "parameters": [
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "Page number (default: 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "Items per page (default: 10, max: 100)",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/responses.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/controllers.UserListResponseDTO"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request - Invalid pagination parameters",
+                        "schema": {
+                            "$ref": "#/definitions/responses.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/responses.ErrorResponse"
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "Create a new user account with name, email and password",
                 "consumes": [
@@ -223,6 +290,27 @@ const docTemplate = `{
                 }
             }
         },
+        "controllers.PaginationResponse": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "page": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "totalItems": {
+                    "type": "integer",
+                    "example": 25
+                },
+                "totalPages": {
+                    "type": "integer",
+                    "example": 3
+                }
+            }
+        },
         "controllers.UserDTO": {
             "type": "object",
             "required": [
@@ -244,6 +332,20 @@ const docTemplate = `{
                 "password": {
                     "type": "string",
                     "example": "pas$worD123"
+                }
+            }
+        },
+        "controllers.UserListResponseDTO": {
+            "type": "object",
+            "properties": {
+                "pagination": {
+                    "$ref": "#/definitions/controllers.PaginationResponse"
+                },
+                "users": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/controllers.UserResponseDTO"
+                    }
                 }
             }
         },
@@ -310,7 +412,7 @@ const docTemplate = `{
     },
     "securityDefinitions": {
         "BearerAuth": {
-            "description": "Enter JWT token (the \"Bearer \" prefix will be added automatically)",
+            "description": "Bearer token for JWT authentication. Format: \"Bearer {token}\"",
             "type": "apiKey",
             "name": "Authorization",
             "in": "header"

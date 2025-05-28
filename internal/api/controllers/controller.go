@@ -22,6 +22,7 @@ func InitController(e *echo.Echo, usecase *usecase.Usecase) {
 	// Protected user routes (JWT required)
 	usersGroup := apiV1.Group("/users")
 	usersGroup.Use(middlewares.JWTAuth())
+	usersGroup.GET("", controller.GetAllUsers) // Get all users
 	usersGroup.GET("/:id", controller.GetUserByID)
 	// usersGroup.GET("/me", controller.GetCurrentUser)
 }
