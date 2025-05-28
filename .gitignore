@@ -1,0 +1,13 @@
+# Compiled Go binary
+bin/
+
+# Dependency directory
+vendor/
+
+
+# Environment files
+.env
+
+.DS_Store
+cmd/api/__debug*
+.docker
