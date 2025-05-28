@@ -36,6 +36,21 @@ definitions:
     - name
     - password
     type: object
+  controllers.UserResponseDTO:
+    properties:
+      createdAt:
+        example: "2023-01-01T00:00:00Z"
+        type: string
+      email:
+        example: jimmy@example.com
+        type: string
+      id:
+        example: 507f1f77bcf86cd799439011
+        type: string
+      name:
+        example: Jimmy
+        type: string
+    type: object
   responses.ErrorDetail:
     properties:
       message:
@@ -102,6 +117,46 @@ paths:
       summary: Create User
       tags:
       - Users
+  /v1/users/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a user's details by their ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/responses.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controllers.UserResponseDTO'
+              type: object
+        "400":
+          description: Bad Request - Invalid user ID format
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+        "404":
+          description: Not Found - User not found
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get User by ID
+      tags:
+      - Users
   /v1/users/login:
     post:
       consumes:
@@ -143,7 +198,7 @@ paths:
       - Authentication
 securityDefinitions:
   BearerAuth:
-    description: 'Bearer token for JWT authentication. Format: "Bearer {token}"'
+    description: Enter JWT token (the "Bearer " prefix will be added automatically)
     in: header
     name: Authorization
     type: apiKey

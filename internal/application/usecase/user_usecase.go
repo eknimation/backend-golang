@@ -48,10 +48,18 @@ func (uc *Usecase) AuthenticateUser(user domain.User) (string, error) {
 	jwtManager := jwt.NewJWTManager(appConfig.JWTSecret, 24*time.Hour)
 
 	// Generate JWT token
-	token, err := jwtManager.GenerateToken(user.ID, user.Email)
+	token, err := jwtManager.GenerateToken(storedUser.ID, storedUser.Email)
 	if err != nil {
 		return "", err
 	}
 
 	return token, nil
+}
+
+func (uc *Usecase) GetUserByID(id string) (*domain.User, error) {
+	user, err := uc.userRepo.GetUserByID(id)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
 }

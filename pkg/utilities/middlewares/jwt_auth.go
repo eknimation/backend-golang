@@ -22,13 +22,16 @@ func JWTAuth() echo.MiddlewareFunc {
 				return c.JSON(http.StatusUnauthorized, responses.Error(http.StatusUnauthorized, "Authorization header required"))
 			}
 
+			var tokenString string
 			// Check if it starts with "Bearer "
-			if !strings.HasPrefix(authHeader, "Bearer ") {
-				return c.JSON(http.StatusUnauthorized, responses.Error(http.StatusUnauthorized, "Bearer token required"))
+			if strings.HasPrefix(authHeader, "Bearer ") {
+				tokenString = strings.TrimPrefix(authHeader, "Bearer ")
+			} else {
+				// If no "Bearer " prefix, assume the entire header value is the token
+				// This allows Swagger UI to work without requiring users to add "Bearer " manually
+				tokenString = authHeader
 			}
 
-			// Extract token
-			tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 			if tokenString == "" {
 				return c.JSON(http.StatusUnauthorized, responses.Error(http.StatusUnauthorized, "Token is required"))
 			}

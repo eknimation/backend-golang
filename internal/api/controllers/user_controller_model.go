@@ -14,3 +14,10 @@ type LoginDTO struct {
 type LoginResponseDTO struct {
 	Token string `json:"token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
 }
+
+type UserResponseDTO struct {
+	ID        string `json:"id" example:"507f1f77bcf86cd799439011"`
+	Name      string `json:"name" example:"Jimmy"`
+	Email     string `json:"email" example:"jimmy@example.com"`
+	CreatedAt string `json:"createdAt" example:"2023-01-01T00:00:00Z"`
+}

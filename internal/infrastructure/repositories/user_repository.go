@@ -8,6 +8,8 @@ import (
 	"backend-service/internal/domain"
 	"backend-service/internal/infrastructure/database/models"
 
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -51,7 +53,7 @@ func (r *Repo) GetUserByEmail(email string) (*domain.User, error) {
 
 	// Find user by email
 	var userModel models.UserModel
-	err := collection.FindOne(ctx, map[string]interface{}{"email": email}).Decode(&userModel)
+	err := collection.FindOne(ctx, bson.M{"email": email}).Decode(&userModel)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, errors.New("user not found")
@@ -65,6 +67,41 @@ func (r *Repo) GetUserByEmail(email string) (*domain.User, error) {
 		Name:      userModel.Name,
 		Email:     userModel.Email,
 		Password:  userModel.Password,
+		CreatedAt: &userModel.CreatedAt,
+	}
+
+	return user, nil
+}
+
+func (r *Repo) GetUserByID(id string) (*domain.User, error) {
+	// Create a context with a timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// Convert string ID to ObjectID
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, errors.New("invalid user ID format")
+	}
+
+	// Get the "users" collection
+	collection := r.db.Collection("users")
+
+	// Find user by ID
+	var userModel models.UserModel
+	err = collection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&userModel)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, errors.New("user not found")
+		}
+		return nil, err
+	}
+
+	// Map models.UserModel to domain.User
+	user := &domain.User{
+		ID:        userModel.ID.Hex(),
+		Name:      userModel.Name,
+		Email:     userModel.Email,
 		CreatedAt: &userModel.CreatedAt,
 	}
 
