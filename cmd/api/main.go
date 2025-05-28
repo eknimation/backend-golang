@@ -27,11 +27,11 @@ import (
 // @description				Backend service API for user management and authentication
 // @host					localhost:5555
 // @BasePath				/
-//
-// @securityDefinitions.apikey X-API-Key
+
+// @securityDefinitions.apikey BearerAuth
 // @in header
-// @name X-API-Key
-// @description API key for authentication
+// @name Authorization
+// @description Bearer token for JWT authentication. Format: "Bearer {token}"
 func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Fatal(err)

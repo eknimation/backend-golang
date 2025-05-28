@@ -12,6 +12,14 @@ type Controller struct {
 
 func InitController(e *echo.Echo, usecase *usecase.Usecase) {
 	controller := &Controller{uc: usecase}
-	group := e.Group("/v1")
-	group.POST("/user", controller.CreateUser)
+	apiV1 := e.Group("/v1")
+
+	// Public user routes (no auth required)
+	apiV1.POST("/users", controller.CreateUser) // Create user account
+	apiV1.POST("/users/login", controller.AuthenticateUser)
+
+	// Protected user routes (JWT required)
+	// usersGroup := apiV1.Group("/users")
+	// usersGroup.Use(middlewares.JWTAuth())
+	// usersGroup.GET("/me", controller.GetCurrentUser)
 }
