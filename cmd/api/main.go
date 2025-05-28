@@ -38,8 +38,10 @@ import (
 // @name Authorization
 // @description Bearer token for JWT authentication. Format: "Bearer {token}"
 func main() {
+	// Load .env file if it exists (optional for Docker environments)
 	if err := godotenv.Load(); err != nil {
-		log.Fatal(err)
+		log.Printf("Warning: .env file not found or could not be loaded: %v", err)
+		log.Println("Continuing with environment variables from system/docker-compose...")
 	}
 
 	appConfig := config.GetAppConfig()
