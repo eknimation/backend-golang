@@ -1,8 +1,10 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"time"
 
 	"backend-service/config"
@@ -14,6 +16,8 @@ import (
 	"backend-service/internal/infrastructure/repositories"
 	"backend-service/pkg/utilities/logger"
 	"backend-service/pkg/utilities/middlewares"
+	"backend-service/pkg/utilities/services"
+	"backend-service/pkg/utilities/shutdown"
 
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
@@ -46,6 +50,7 @@ func main() {
 	e := echo.New()
 
 	e.Use(middlewares.RequestResponseLogger(logger))
+	e.Use(middlewares.RequestContext(30 * time.Second)) // 30 second timeout for requests
 
 	dbClient := database.ConnectDB(appConfig.MongoDB)
 
@@ -57,22 +62,27 @@ func main() {
 	repo := repositories.New(dbClient, appConfig.MongoDB.DatabaseName)
 	usecase := usecase.New(repo)
 
-	go func() {
-		ticker := time.NewTicker(10 * time.Second)
-		defer ticker.Stop()
+	// Create a context for graceful shutdown
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-		for {
-			select {
-			case <-ticker.C:
-				count, err := usecase.GetUserCount()
-				if err != nil {
-					logger.Error(fmt.Sprintf("Failed to get user count: %v", err))
-				} else {
-					logger.Info(fmt.Sprintf("Total users in database: %d", count))
-				}
+	// Create periodic task service for user count monitoring
+	userCountTask := services.NewPeriodicTaskService(
+		"user-count-monitor",
+		10*time.Second,
+		logger,
+		func() {
+			count, err := usecase.GetUserCount()
+			if err != nil {
+				logger.Error(fmt.Sprintf("Failed to get user count: %v", err))
+			} else {
+				logger.Info(fmt.Sprintf("Total users in database: %d", count))
 			}
-		}
-	}()
+		},
+	)
+
+	// Start the periodic task service
+	userCountTask.Start(ctx)
 
 	if appConfig.Env != "production" {
 		e.GET("/swagger/*", echoSwagger.WrapHandler)
@@ -85,5 +95,20 @@ func main() {
 		logger.Info(fmt.Sprintf("Method: %s, Path: %s", route.Method, route.Path))
 	}
 
-	e.Logger.Fatal(e.Start(":" + appConfig.Port))
+	// Create graceful shutdown handler
+	gracefulShutdown := shutdown.NewGracefulShutdown(logger, e, dbClient, 30*time.Second)
+
+	// Add the periodic task service to graceful shutdown
+	gracefulShutdown.AddService(userCountTask)
+
+	// Start server in a goroutine
+	go func() {
+		logger.Info(fmt.Sprintf("Starting server on port %s", appConfig.Port))
+		if err := e.Start(":" + appConfig.Port); err != nil && err != http.ErrServerClosed {
+			logger.Error(fmt.Sprintf("Failed to start server: %v", err))
+		}
+	}()
+
+	// Wait for shutdown signal and perform graceful shutdown
+	gracefulShutdown.WaitForShutdown(ctx, cancel)
 }
