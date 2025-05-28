@@ -40,3 +40,33 @@ func (r *Repo) CreateUser(user domain.User) error {
 
 	return nil
 }
+
+func (r *Repo) GetUserByEmail(email string) (*domain.User, error) {
+	// Create a context with a timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// Get the "users" collection
+	collection := r.db.Collection("users")
+
+	// Find user by email
+	var userModel models.UserModel
+	err := collection.FindOne(ctx, map[string]interface{}{"email": email}).Decode(&userModel)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, errors.New("user not found")
+		}
+		return nil, err
+	}
+
+	// Map models.UserModel to domain.User
+	user := &domain.User{
+		ID:        userModel.ID.Hex(),
+		Name:      userModel.Name,
+		Email:     userModel.Email,
+		Password:  userModel.Password,
+		CreatedAt: &userModel.CreatedAt,
+	}
+
+	return user, nil
+}

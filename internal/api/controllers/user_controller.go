@@ -20,8 +20,7 @@ import (
 // @Success      201      {object}  responses.Response
 // @Failure      400      {object}  responses.ErrorResponse  "Bad Request - Validation failed or email already exists"
 // @Failure      500      {object}  responses.ErrorResponse
-// @Router       /v1/user [post]
-// @Security     X-API-Key
+// @Router       /v1/users [post]
 func (ctrl *Controller) CreateUser(c echo.Context) error {
 	var userDTO UserDTO
 	if err := c.Bind(&userDTO); err != nil {
@@ -50,4 +49,49 @@ func (ctrl *Controller) CreateUser(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusCreated, responses.Ok(http.StatusCreated, "User created successfully", nil))
+}
+
+// @Summary      Authenticate User
+// @Description  Authenticate a user with email and password, returns JWT token
+// @Tags         Authentication
+// @Accept       json
+// @Produce      json
+// @Param        credentials  body      LoginDTO  true  "User login credentials"
+// @Success      200      {object}  responses.Response{data=LoginResponseDTO}
+// @Failure      400      {object}  responses.ErrorResponse  "Bad Request - Validation failed"
+// @Failure      401      {object}  responses.ErrorResponse  "Unauthorized - Invalid credentials"
+// @Failure      500      {object}  responses.ErrorResponse
+// @Router       /v1/users/login [post]
+func (ctrl *Controller) AuthenticateUser(c echo.Context) error {
+	var loginDTO LoginDTO
+	if err := c.Bind(&loginDTO); err != nil {
+		return c.JSON(http.StatusBadRequest, responses.Error(http.StatusBadRequest, err.Error()))
+	}
+
+	// Validate the loginDTO struct
+	if err := validator.Validate(&loginDTO); err != nil {
+		validationErr := validator.FormatValidationErrors(err)
+		return c.JSON(http.StatusBadRequest, validationErr)
+	}
+
+	user := domain.User{
+		Email:    loginDTO.Email,
+		Password: loginDTO.Password,
+	}
+
+	// Authenticate user and get JWT token
+	token, err := ctrl.uc.AuthenticateUser(user)
+	if err != nil {
+		if strings.Contains(err.Error(), "invalid credentials") {
+			return c.JSON(http.StatusUnauthorized, responses.Error(http.StatusUnauthorized, "Invalid credentials"))
+		}
+		return c.JSON(http.StatusInternalServerError, responses.Error(http.StatusInternalServerError, err.Error()))
+	}
+
+	// Create response
+	responseData := LoginResponseDTO{
+		Token: token,
+	}
+
+	return c.JSON(http.StatusOK, responses.Ok(http.StatusOK, "Authentication successful", responseData))
 }

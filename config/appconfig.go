@@ -11,11 +11,11 @@ import (
 var conf *AppConfig
 
 type AppConfig struct {
-	MongoDB  *database.MongoConfig
-	APIKey   string `env:"API_KEY"`
-	Port     string `env:"API_PORT"`
-	Env      string `env:"APP_ENV"`
-	BasePath string `env:"BASE_PATH"`
+	MongoDB   *database.MongoConfig
+	Port      string `env:"API_PORT"`
+	Env       string `env:"APP_ENV"`
+	BasePath  string `env:"BASE_PATH"`
+	JWTSecret string `env:"JWT_SECRET"`
 }
 
 func GetAppConfig() *AppConfig {

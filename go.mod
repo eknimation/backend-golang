@@ -3,6 +3,7 @@ module backend-service
 go 1.24.2
 
 require (
+	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/labstack/echo v3.3.10+incompatible
 	github.com/labstack/echo/v4 v4.13.3
 	github.com/sethvargo/go-envconfig v0.8.3

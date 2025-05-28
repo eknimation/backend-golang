@@ -1,5 +1,23 @@
 basePath: /
 definitions:
+  controllers.LoginDTO:
+    properties:
+      email:
+        example: jimmy@example.com
+        type: string
+      password:
+        example: pas$worD123
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  controllers.LoginResponseDTO:
+    properties:
+      token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+    type: object
   controllers.UserDTO:
     properties:
       email:
@@ -54,7 +72,7 @@ info:
   title: Backend Go API
   version: v1.0.0
 paths:
-  /v1/user:
+  /v1/users:
     post:
       consumes:
       - application/json
@@ -81,15 +99,52 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/responses.ErrorResponse'
-      security:
-      - X-API-Key: []
       summary: Create User
       tags:
       - Users
+  /v1/users/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate a user with email and password, returns JWT token
+      parameters:
+      - description: User login credentials
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.LoginDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/responses.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controllers.LoginResponseDTO'
+              type: object
+        "400":
+          description: Bad Request - Validation failed
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+        "401":
+          description: Unauthorized - Invalid credentials
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/responses.ErrorResponse'
+      summary: Authenticate User
+      tags:
+      - Authentication
 securityDefinitions:
-  X-API-Key:
-    description: API key for authentication
+  BearerAuth:
+    description: 'Bearer token for JWT authentication. Format: "Bearer {token}"'
     in: header
-    name: X-API-Key
+    name: Authorization
     type: apiKey
 swagger: "2.0"
