@@ -1,0 +1,140 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Backend service API for user management and authentication",
+        "title": "Backend Go API",
+        "contact": {
+            "name": "Akekapon S.",
+            "email": "eknimation@gmail.com"
+        },
+        "version": "v1.0.0"
+    },
+    "host": "localhost:5555",
+    "basePath": "/",
+    "paths": {
+        "/v1/user": {
+            "post": {
+                "security": [
+                    {
+                        "X-API-Key": []
+                    }
+                ],
+                "description": "Create a new user account with name, email and password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Create User",
+                "parameters": [
+                    {
+                        "description": "User registration details",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controllers.UserDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/responses.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request - Validation failed or email already exists",
+                        "schema": {
+                            "$ref": "#/definitions/responses.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/responses.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "controllers.UserDTO": {
+            "type": "object",
+            "required": [
+                "email",
+                "name",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "jimmy@example.com"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 2,
+                    "example": "Jimmy"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "pas$worD123"
+                }
+            }
+        },
+        "responses.ErrorDetail": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Internal Server Error"
+                },
+                "stack": {
+                    "type": "string",
+                    "example": "Error:Database error"
+                }
+            }
+        },
+        "responses.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "example": "UNHANDLED_EXCEPTION"
+                },
+                "error": {
+                    "$ref": "#/definitions/responses.ErrorDetail"
+                }
+            }
+        },
+        "responses.Response": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "example": "SUCCESS"
+                },
+                "data": {},
+                "message": {
+                    "type": "string",
+                    "example": "successfully"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "X-API-Key": {
+            "description": "API key for authentication",
+            "type": "apiKey",
+            "name": "X-API-Key",
+            "in": "header"
+        }
+    }
+}
